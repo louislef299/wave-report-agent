@@ -1,11 +1,13 @@
 package main
 
 import (
-	"fmt"
+	"errors"
 	"strings"
 
 	"google.golang.org/adk/tool"
 )
+
+var ErrInvalidName = errors.New("could not find a spot with the provided name")
 
 type Spot struct {
 	Name  string `json:"name" jsonschema_description:"The human-reable name of the spot."`
@@ -46,5 +48,5 @@ func getSpotsOfInterest(_ tool.Context, args SpotArgs) ([]Spot, error) {
 			return []Spot{s}, nil
 		}
 	}
-	return nil, fmt.Errorf("could not find a spot with the name '%s'", args.Name)
+	return nil, ErrInvalidName
 }
