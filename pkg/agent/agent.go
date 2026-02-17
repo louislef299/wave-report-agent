@@ -1,4 +1,4 @@
-package main
+package agent
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"google.golang.org/genai"
 )
 
-func newWaveAgent(ctx context.Context) (agent.Agent, error) {
+func NewWaveAgent(ctx context.Context) (agent.Agent, error) {
 	model, err := gemini.NewModel(ctx, "gemini-3-flash-preview", &genai.ClientConfig{
 		APIKey: os.Getenv("GOOGLE_API_KEY"),
 	})

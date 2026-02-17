@@ -8,12 +8,14 @@ import (
 	"google.golang.org/adk/agent"
 	"google.golang.org/adk/cmd/launcher"
 	"google.golang.org/adk/cmd/launcher/full"
+
+	wagent "github.com/louislef299/wave-report-agent/pkg/agent"
 )
 
 func main() {
 	ctx := context.Background()
 
-	waveAgent, err := newWaveAgent(ctx)
+	waveAgent, err := wagent.NewWaveAgent(ctx)
 	if err != nil {
 		log.Fatalf("Failed to create agent: %v", err)
 	}

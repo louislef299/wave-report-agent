@@ -1,4 +1,4 @@
-package main
+package spot
 
 import (
 	"fmt"
@@ -25,7 +25,7 @@ func TestGetSpotsOfInterest(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(fmt.Sprintf("Spot %s", tt.name), func(t *testing.T) {
-			spots, err := getSpotsOfInterest(nil, SpotArgs{Name: tt.name})
+			spots, err := GetSpotsOfInterest(nil, SpotArgs{Name: tt.name})
 			if err != tt.expected {
 				t.Fatalf("Returned error did not match expected error:\n\tReturned: %v\n\tExpected: %v", err, tt.expected)
 			}

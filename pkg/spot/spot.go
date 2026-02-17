@@ -1,4 +1,4 @@
-package main
+package spot
 
 import (
 	"errors"
@@ -38,7 +38,7 @@ var spots = []Spot{
 	},
 }
 
-func getSpotsOfInterest(_ tool.Context, args SpotArgs) ([]Spot, error) {
+func GetSpotsOfInterest(_ tool.Context, args SpotArgs) ([]Spot, error) {
 	if strings.EqualFold(args.Name, "all") {
 		return spots, nil
 	}
