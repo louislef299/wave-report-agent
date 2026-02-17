@@ -2,23 +2,13 @@ package agent
 
 import (
 	"context"
-	"fmt"
-	"os"
 
 	"google.golang.org/adk/agent"
 	"google.golang.org/adk/agent/llmagent"
-	"google.golang.org/adk/model/gemini"
-	"google.golang.org/genai"
+	"google.golang.org/adk/model"
 )
 
-func NewWaveAgent(ctx context.Context) (agent.Agent, error) {
-	model, err := gemini.NewModel(ctx, "gemini-3-flash-preview", &genai.ClientConfig{
-		APIKey: os.Getenv("GOOGLE_API_KEY"),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("create model: %w", err)
-	}
-
+func NewWaveAgent(ctx context.Context, model model.LLM) (agent.Agent, error) {
 	return llmagent.New(llmagent.Config{
 		Name:        "wave_report_agent",
 		Model:       model,

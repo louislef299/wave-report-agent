@@ -7,6 +7,8 @@ import (
 	"google.golang.org/adk/tool"
 )
 
+const MetaNwsGridPoint = "nws_grid_point"
+
 var ErrInvalidName = errors.New("could not find a spot with the provided name")
 
 type Spot struct {
@@ -35,18 +37,23 @@ var spots = []Spot{
 		Longitude:  -117.2583427,
 		TidalRange: ">4ft",
 		Spec:       "Mornings seem to traditionally have better surf than afternoons.",
+		Meta:       map[string]any{},
 	},
 }
 
-func GetSpotsOfInterest(_ tool.Context, args SpotArgs) ([]Spot, error) {
+type SpotsResult struct {
+	Spots []Spot `json:"spots"`
+}
+
+func GetSpotsOfInterest(_ tool.Context, args SpotArgs) (SpotsResult, error) {
 	if strings.EqualFold(args.Name, "all") {
-		return spots, nil
+		return SpotsResult{Spots: spots}, nil
 	}
 
 	for _, s := range spots {
 		if strings.EqualFold(s.Name, args.Name) {
-			return []Spot{s}, nil
+			return SpotsResult{Spots: []Spot{s}}, nil
 		}
 	}
-	return nil, ErrInvalidName
+	return SpotsResult{}, ErrInvalidName
 }
