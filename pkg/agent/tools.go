@@ -20,7 +20,7 @@ func getTools() []tool.Tool {
 
 	nwsTool, err := functiontool.New(functiontool.Config{
 		Name:        "get_spot_weather",
-		Description: "Returns the temperature, wind speed and direction of a provided Spot.",
+		Description: "Returns the temperature, wind speed, forecast, and direction of a provided Spot.",
 	}, weather.GetNwsForecast)
 	if err != nil {
 		log.Fatal("Failed to create National Weather Service tool:", err)

@@ -33,6 +33,7 @@ type GridRespPeriod struct {
 	Temperature   int32  `json:"temperature"`
 	WindSpeed     string `json:"windSpeed"`
 	WindDirection string `json:"windDirection"`
+	Forecast      string `json:"detailedForecast"`
 }
 
 // GetNwsForecast gathers the 7-day forecast over 12 hour periods by calling the

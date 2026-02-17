@@ -7,7 +7,6 @@ import (
 
 	"github.com/louislef299/claude-go-adk"
 	wagent "github.com/louislef299/wave-report-agent/pkg/agent"
-	"github.com/louislef299/wave-report-agent/pkg/spot"
 	"google.golang.org/adk/agent"
 	"google.golang.org/adk/cmd/launcher"
 	"google.golang.org/adk/cmd/launcher/full"
@@ -18,14 +17,6 @@ import (
 
 func main() {
 	ctx := context.Background()
-	result, err := spot.GetSpotsOfInterest(nil, spot.SpotArgs{Name: "all"})
-	if err != nil {
-		log.Fatal(err)
-	}
-	if len(result.Spots) < 1 {
-		log.Fatal("no spots returned")
-	}
-
 	waveAgent, err := wagent.NewWaveAgent(ctx, getClaudeModel())
 	if err != nil {
 		log.Fatalf("Failed to create agent: %v", err)
@@ -52,6 +43,5 @@ func getGeminiModel(ctx context.Context) model.LLM {
 }
 
 func getClaudeModel() model.LLM {
-	return claude.NewModel("claude-sonnet-4-5-20250929")
-	// For debug logging: claude.NewModel("claude-sonnet-4-5-20250929", claude.WithDebug())
+	return claude.NewModel("claude-sonnet-4-5-20250929", claude.WithDebug())
 }

@@ -8,6 +8,9 @@ require (
 	google.golang.org/genai v1.46.0
 )
 
+// keep here until claude-go-adk is versioned properly
+replace github.com/louislef299/claude-go-adk => ../claude-go-adk
+
 require (
 	cloud.google.com/go v0.123.0 // indirect
 	cloud.google.com/go/auth v0.18.2 // indirect

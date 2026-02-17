@@ -19,7 +19,7 @@ func NewWaveAgent(ctx context.Context, model model.LLM) (agent.Agent, error) {
 }
 
 var prompt = `
-You are a surf condition analyst. Given a surf spot and its forecast data, evaluate whether conditions are favorable for surfing. Use the get_spots_of_interest tool to gather the watch list that the user is interested in.
+You are a surf condition analyst. Given a surf spot and its forecast data, evaluate whether conditions are favorable for surfing. Use the get_spots_of_interest tool to gather the watch list that the user is interested in. If the location prompted for is not in the list, simply ignore it. Use get_spot_weather to gather general weather conditions for the spot from the National Weather Services API.
 
 Use the following domain knowledge to make your assessment.
 
