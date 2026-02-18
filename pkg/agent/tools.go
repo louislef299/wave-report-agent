@@ -39,10 +39,19 @@ func getTools() []tool.Tool {
 		Description: "Returns the current date in RFC3339 format so agent can gather bearings.",
 	}, getDate)
 
+	buoyTool, err := functiontool.New(functiontool.Config{
+		Name:        "get_buoy_observations",
+		Description: "Returns the latest real-time buoy observations (wave height, dominant period, mean wave direction, wind speed, wind direction) from the nearest NOAA NDBC buoy to the spot. Use this to validate forecast data against actual conditions and identify discrepancies.",
+	}, weather.GetBuoyObservations)
+	if err != nil {
+		log.Fatal("Failed to create buoy tool:", err)
+	}
+
 	return []tool.Tool{
 		spotTool,
 		nwsTool,
 		openMetroTool,
 		currentDateTool,
+		buoyTool,
 	}
 }

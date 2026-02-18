@@ -50,6 +50,11 @@ func GetHourlyMarineForecast(ctx tool.Context, s *spot.Spot) (*OpenMetroResp, er
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, ErrInvalidHttpResponse
+	}
 
 	resBody, err := io.ReadAll(resp.Body)
 	if err != nil {

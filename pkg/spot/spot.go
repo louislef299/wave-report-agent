@@ -19,6 +19,10 @@ type Spot struct {
 	Longitude float32 `json:"longitude" jsonschema_description:"The longitudinal point to find the spot."`
 	Latitude  float32 `json:"latitude" jsonschema_description:"The latitudinal point to find the spot."`
 
+	BreakType     string `json:"break_type" jsonschema_description:"The type of wave break: beach break, reef break, or point break."`
+	Facing        string `json:"facing" jsonschema_description:"Cardinal direction the beach faces (e.g. WSW). Used to determine whether wind is offshore or onshore."`
+	NearestBuoyID string `json:"nearest_buoy_id" jsonschema_description:"NOAA NDBC station ID of the nearest offshore buoy for real-time wave observations."`
+
 	TidalRange string         `json:"tidal_range" jsonschema_description:"The ideal tidal range for the spot(ex:6ft-4ft)."`
 	Spec       string         `json:"spec" jsonschema_description:"Additional specification information to look for at this spot."`
 	Meta       map[string]any `json:"meta" jsonschema_description:"Optional metadata to tie to the spot."`
@@ -30,14 +34,17 @@ type SpotArgs struct {
 
 var spots = []Spot{
 	{
-		Name:       "Ocean Beach",
-		City:       "San Diego",
-		State:      "California",
-		Latitude:   32.7487318,
-		Longitude:  -117.2583427,
-		TidalRange: ">4ft",
-		Spec:       "Mornings seem to traditionally have better surf than afternoons.",
-		Meta:       map[string]any{},
+		Name:          "Ocean Beach",
+		City:          "San Diego",
+		State:         "California",
+		Latitude:      32.7487318,
+		Longitude:     -117.2583427,
+		BreakType:     "beach break",
+		Facing:        "WSW",
+		NearestBuoyID: "46086",
+		TidalRange:    ">2ft",
+		Spec:          "Beach break with shifting sandbars. Mornings traditionally better than afternoons. Highly exposed spot — conditions are frequently rougher than forecasts suggest. Strong rip currents are common, especially with wind > 15 mph or during large swell. Exercise caution in strong wind regardless of direction.",
+		Meta:          map[string]any{},
 	},
 }
 
