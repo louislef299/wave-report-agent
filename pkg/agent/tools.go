@@ -34,9 +34,15 @@ func getTools() []tool.Tool {
 		log.Fatal("Failed to create Open Metro tool:", err)
 	}
 
+	currentDateTool, err := functiontool.New(functiontool.Config{
+		Name:        "get_current_date",
+		Description: "Returns the current date in RFC3339 format so agent can gather bearings.",
+	}, getDate)
+
 	return []tool.Tool{
 		spotTool,
 		nwsTool,
 		openMetroTool,
+		currentDateTool,
 	}
 }
