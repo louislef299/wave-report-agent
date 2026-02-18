@@ -13,7 +13,7 @@ var spots = []Spot{
 		NearestBuoyID: "46086",
 		TideStationID: "9410170",
 		TidalRange:    ">2ft",
-		Spec:          "Beach break with shifting sandbars. Mornings traditionally better than afternoons. Highly exposed spot — conditions are frequently rougher than forecasts suggest. Strong rip currents are common, especially with wind > 15 mph or during large swell. Exercise caution in strong wind regardless of direction.",
+		Spec:          "Beach break with shifting sandbars. Mornings traditionally better than afternoons. Highly exposed spot — conditions are frequently rougher than forecasts suggest. Strong rip currents are common, especially with wind > 15 mph or during large swell. Exercise caution in strong wind regardless of direction. Best swell directions: NW to W; SW also works. Holds up to ~8ft — above that most sets close out across the entire beach. Very low or negative tides accelerate closeout tendency. Best season: November through February (NW groundswell season).",
 		Meta:          map[string]any{},
 	},
 	{
@@ -28,7 +28,7 @@ var spots = []Spot{
 		NearestBuoyID: "46053",
 		TideStationID: "9411340",
 		TidalRange:    ">2ft",
-		Spec:          "",
+		Spec:          "Classic California point break, known as the 'Queen of the Coast.' Optimal swell: WNW to W (250–280°), 4–8ft, 13s+ period. Key nuance: Rincon breaks significantly smaller than nearby spots when NW swell period is very long (>16s) — the swell wraps around the point and loses energy; conditions improve when period drops below 16s or swell shifts more WSW. All three sections (The Point, Rivermouth, Indicator) improve as the tide drops. Best at low to mid falling tide. Offshore wind: NE. Best season: October through March (west/northwest groundswell season).",
 		Meta:          map[string]any{},
 	},
 	{

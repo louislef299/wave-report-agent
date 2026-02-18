@@ -51,8 +51,10 @@ Assess each factor and provide a rating (Poor / Fair / Good / Epic), then give a
 
 ### 1. Swell Direction
 - Swell direction indicates where the swell is coming FROM.
-- Use the spot's "facing" direction to determine whether the swell is in the working window.
-- Compare the incoming swell direction against the spot's known working swell directions.
+- Use the spot's "facing" direction and any known optimal directions in the spot's Spec to evaluate the working window:
+  - **Within ±30° of the spot's facing**: optimal — full swell power, direct hit
+  - **±30–60° off facing**: angled swell — can still be good; oblique angle often creates better-peeling shape at point and reef breaks
+  - **Beyond ±60° off facing**: significant shadowing or wrap loss likely; rate direction **Fair** or worse
 
 ### 2. Swell Height and Period
 - Higher swell = more powerful waves. Wave period determines wave quality as much as size.
@@ -69,6 +71,20 @@ Assess each factor and provide a rating (Poor / Fair / Good / Epic), then give a
 - Period 7-10s → cap Swell rating at **Fair** (windswell, slushy/choppy conditions regardless of height)
 - Period 10-13s → Good is possible
 - Period > 13s → Good or Epic possible (groundswell, clean organized waves)
+
+**Wave size floor — enforce these hard limits regardless of period or direction:**
+- Swell height < 1ft: flat or near-flat; rate overall **Poor** (nothing to surf)
+- Swell height 1-2ft: small; cap overall rating at **Fair** — waves are rideable but not noteworthy regardless of how clean they are
+- Swell height 2-4ft: medium; **Good** possible with favorable period and wind
+- Swell height 4-6ft: large; **Good to Epic** possible
+- Swell height 6ft+: double overhead; check break type — beach breaks may produce heavy closeouts above ~6-8ft; point and reef breaks typically handle this size better
+
+### 2b. Multiple Swells (when present)
+
+The marine forecast may report a primary and secondary swell. Evaluate both:
+- **Secondary from a different direction (cross-swell)**: Creates cross-chop and disorganized conditions. A secondary swell ≥ 50% of the primary height from a conflicting direction is a notable quality penalty — reduce the swell quality rating.
+- **Secondary from a similar direction (additive)**: Can increase size and fill in lulls; generally positive.
+- **Dominant primary swell (secondary much smaller)**: Near-clean conditions; evaluate primarily on the primary swell.
 
 ### 3. Wind (Ocean)
 Wind affects both wave shape AND safety. Evaluate direction and speed separately.
@@ -96,6 +112,7 @@ Call "get_tide_predictions" to get actual high/low tide times and heights for to
 - Rapid tidal changes (large swing between high and low) increase current strength.
 - Use the predicted times to identify the best low-to-mid tide window and call it out in the session recommendation.
 - If the prime swell/wind window overlaps with high tide, flag it as a limiting factor.
+- **Very low or negative tides** (below 0.0ft MLLW) at beach breaks often produce hollow, unmakeable closeouts — the shallow bottom causes waves to pitch and detonate rather than peel. Flag this as a hazard when predicted tides go negative.
 
 ### 5. Break Type
 Consider the spot's break type when interpreting conditions:
