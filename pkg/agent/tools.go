@@ -55,6 +55,14 @@ func getTools() []tool.Tool {
 		log.Fatal("Failed to create tides tool:", err)
 	}
 
+	alertsTool, err := functiontool.New(functiontool.Config{
+		Name:        "get_nws_alerts",
+		Description: "Returns active NWS weather alerts (Gale Warnings, Storm Warnings, Small Craft Advisories, High Surf Advisories, etc.) for the spot's coordinates. Call for all spot types. Especially important for lake spots where Gale Warnings and Storm Warnings are the primary surf condition signal. Returns an empty list when no alerts are active.",
+	}, weather.GetNwsAlerts)
+	if err != nil {
+		log.Fatal("Failed to create alerts tool:", err)
+	}
+
 	return []tool.Tool{
 		spotTool,
 		nwsTool,
@@ -62,5 +70,6 @@ func getTools() []tool.Tool {
 		currentDateTool,
 		buoyTool,
 		tidesTool,
+		alertsTool,
 	}
 }

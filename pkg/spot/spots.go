@@ -43,7 +43,7 @@ var spots = []Spot{
 		NearestBuoyID: "BSBM4",
 		TideStationID: "N/A",
 		TidalRange:    "N/A",
-		Spec:          "",
+		Spec:          "W/NW winds produce ~60 miles of fetch — small to moderate waves. S/SW winds produce 250+ miles of fetch across the full length of Lake Michigan — best swell quality with longer periods and larger wave heights. Best conditions come from sustained S/SW winds at 15+ mph for 2+ days. Summer surfing is generally inconsistent; fall through early spring is the prime season.",
 		Meta:          map[string]any{},
 	},
 	{

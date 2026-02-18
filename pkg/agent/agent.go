@@ -31,10 +31,11 @@ Follow this sequence for every request:
 4. For all spots, call these tools (in parallel where possible):
    - "get_spot_marine_forecast" — hourly wave/wind/swell forecast (primary data source for all spot types)
    - "get_buoy_observations" — real-time NDBC buoy observations (cross-reference against forecast)
+   - "get_nws_alerts" — active NWS weather alerts (Gale Warnings, Storm Warnings, Small Craft Advisories, etc.)
 5. For ocean spots only, also call:
    - "get_spot_weather" — NWS 7-day gridded weather forecast (wind, temperature, precipitation)
    - "get_tide_predictions" — high/low tide times and heights from NOAA CO-OPS
-6. If "get_spot_weather" returns null or empty periods (common for some lake/inland coordinates), proceed using marine forecast data alone.
+6. If "get_spot_weather" returns null or empty periods (common for lake/coastal coordinates that fall in marine gridpoint zones), proceed using marine forecast and alert data alone.
 
 ---
 
@@ -144,6 +145,14 @@ Wind is the most important factor for lake surf. Evaluate speed, direction, and 
 - 2 days: Decent, more organized
 - 3+ days: Well-developed swell, best quality
 - Check the NWS forecast for wind trend — is it building, stable, or dropping?
+- **Sustained wind required:** ~19 mph sustained for 3-4 hours is the practical minimum to generate a rideable swell. An instantaneous reading means little without duration — a recent wind start at 20 mph may still produce flat water.
+
+### Seasonal Context (Lake)
+
+- **Peak season: mid-September through early April** — frequent low-pressure systems and large air-water temperature differentials drive storm intensity.
+- **Fall transition (Sep–Nov)**: Warm lake water meeting cold incoming air creates the largest temperature differentials → strongest storms → best wave generation of the year. This is the prime window.
+- **Summer (Jun–Aug)**: Wind swells are infrequent and often too weak for rideable waves. If the request date falls in summer, flag that conditions are inherently less consistent — good days still happen but are rare.
+- **Spring (Mar–May)**: Cold, dense spring water requires significantly more wind energy to generate the same wave heights as fall. A 20 mph spring forecast may produce noticeably less swell than the same forecast in October would.
 
 ### 2. Wave Height and Period (Lake)
 
@@ -164,15 +173,17 @@ Wind is the most important factor for lake surf. Evaluate speed, direction, and 
 
 ### 5. NWS Marine Alerts (Lake)
 
-There is no dedicated tool for NWS marine alerts. Instead, scan the forecast text returned by "get_spot_weather" for these keywords (if the tool returns data; otherwise check "get_spot_marine_forecast" wind values):
-- **"Small Craft Advisory"**: Moderate conditions, waves building
+Call "get_nws_alerts" for the spot and check the returned alerts list. Marine alerts are the single best real-time indicator of lake surf conditions:
+- **"Small Craft Advisory"**: Moderate conditions, waves building — rate as Fair to Good
 - **"Gale Warning"** (34-47 knots / 39-54 mph): **Prime surf conditions** — rate overall as Good or Epic depending on duration and direction
 - **"Storm Warning"** (48+ knots): Extreme surf — Good to Epic for experienced surfers, but flag danger prominently
+- Empty alerts list: no NWS marine concern; rely on wind speed and marine forecast alone
 
 ### Lake Safety Notes
 
 - Rocky point/reef breaks can have significant surge on large swell — know your entry/exit.
-- Cold water temperatures in fall/winter require appropriate wetsuit thickness (5/4mm+).
+- Freshwater is less buoyant than saltwater — recommend a board with more volume than you would use in the ocean.
+- Wetsuit guide: 3/2–4/3mm in summer, 5/4–6/5mm + boots, gloves, and hood in fall/winter (water can drop to 33°F, air to well below 0°F).
 - No lifeguards — self-rescue capability required.
 - Lake Superior is remote; nearest emergency services may be far away.
 
