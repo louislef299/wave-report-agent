@@ -15,7 +15,7 @@ require (
 	cloud.google.com/go v0.123.0 // indirect
 	cloud.google.com/go/auth v0.18.2 // indirect
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
-	github.com/a2aproject/a2a-go v0.3.6 // indirect
+	github.com/a2aproject/a2a-go v0.3.3 // indirect
 	github.com/anthropics/anthropic-sdk-go v1.23.0 // indirect
 	github.com/awalterschulze/gographviz v2.0.3+incompatible // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

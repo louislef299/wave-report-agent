@@ -26,8 +26,17 @@ func getTools() []tool.Tool {
 		log.Fatal("Failed to create National Weather Service tool:", err)
 	}
 
+	openMetroTool, err := functiontool.New(functiontool.Config{
+		Name:        "get_spot_marine_forecast",
+		Description: "Returns hourly marine forecast information of a provided Spot.",
+	}, weather.GetHourlyMarineForecast)
+	if err != nil {
+		log.Fatal("Failed to create Open Metro tool:", err)
+	}
+
 	return []tool.Tool{
 		spotTool,
 		nwsTool,
+		openMetroTool,
 	}
 }
