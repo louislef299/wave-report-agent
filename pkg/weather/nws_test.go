@@ -23,6 +23,17 @@ func TestGatherGridPoint(t *testing.T) {
 			expected:    "https://api.weather.gov/gridpoints/SGX/53,16/forecast",
 			errExpected: nil,
 		},
+		{
+			spot: &spot.Spot{
+				Name:      "Stoney Point",
+				Latitude:  46.9666696,
+				Longitude: -91.6359906,
+			},
+			// ensure that it returns, but maritime information on the nws
+			// service isn't currently supported.
+			expected:    "https://api.weather.gov/gridpoints/DLH/106,78/forecast",
+			errExpected: nil,
+		},
 	}
 
 	for _, tt := range testCases {

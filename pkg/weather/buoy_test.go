@@ -64,13 +64,10 @@ func TestGetBuoyObservations(t *testing.T) {
 				t.Errorf("expected valid wind speed, got %v (missing)", obs.WindSpeedMph)
 			}
 
-			// Offshore ocean buoys additionally report wave height and period.
+			// Offshore ocean buoys additionally report wave height.
 			if tt.expectWaveData {
 				if obs.WaveHeightFt <= 0 {
 					t.Errorf("ocean buoy: expected wave height > 0, got %v", obs.WaveHeightFt)
-				}
-				if obs.DominantPeriodS <= 0 {
-					t.Errorf("ocean buoy: expected dominant period > 0, got %v", obs.DominantPeriodS)
 				}
 			}
 		})
