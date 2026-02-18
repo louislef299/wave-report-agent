@@ -28,7 +28,7 @@ func getTools() []tool.Tool {
 
 	openMetroTool, err := functiontool.New(functiontool.Config{
 		Name:        "get_spot_marine_forecast",
-		Description: "Returns hourly marine forecast information of a provided Spot.",
+		Description: "Returns hourly marine forecast information of a provided Spot. Only to be used for ocean Spot types.",
 	}, weather.GetHourlyMarineForecast)
 	if err != nil {
 		log.Fatal("Failed to create Open Metro tool:", err)
@@ -47,11 +47,20 @@ func getTools() []tool.Tool {
 		log.Fatal("Failed to create buoy tool:", err)
 	}
 
+	tidesTool, err := functiontool.New(functiontool.Config{
+		Name:        "get_tide_predictions",
+		Description: "Returns today's and tomorrow's high and low tide predictions (local time, height in feet relative to MLLW) from the nearest NOAA CO-OPS tide gauge station. Returns nil for lake spots where tides are negligible. Use this to identify the best low-to-mid tide session window.",
+	}, weather.GetTidePredictions)
+	if err != nil {
+		log.Fatal("Failed to create tides tool:", err)
+	}
+
 	return []tool.Tool{
 		spotTool,
 		nwsTool,
 		openMetroTool,
 		currentDateTool,
 		buoyTool,
+		tidesTool,
 	}
 }

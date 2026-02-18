@@ -23,6 +23,7 @@ type Spot struct {
 	BreakType     string `json:"break_type" jsonschema_description:"The type of wave break: beach break, reef break, or point break."`
 	Facing        string `json:"facing" jsonschema_description:"Cardinal direction the beach faces (e.g. WSW). Used to determine whether wind is offshore or onshore."`
 	NearestBuoyID string `json:"nearest_buoy_id" jsonschema_description:"NOAA NDBC station ID of the nearest offshore buoy for real-time wave observations."`
+	TideStationID string `json:"tide_station_id" jsonschema_description:"NOAA CO-OPS tide gauge station ID for fetching tide predictions. See tidesandcurrents.noaa.gov. Empty for lake spots where tides are negligible."`
 
 	TidalRange string         `json:"tidal_range" jsonschema_description:"The ideal tidal range for the spot(ex:6ft-4ft)."`
 	Spec       string         `json:"spec" jsonschema_description:"Additional specification information to look for at this spot."`

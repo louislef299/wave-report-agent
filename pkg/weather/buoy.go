@@ -33,8 +33,8 @@ type BuoyObservation struct {
 // NDBC buoy nearest to the given surf spot. Returns the most recent reading
 // that has wave data.
 func GetBuoyObservations(_ tool.Context, s *spot.Spot) (*BuoyObservation, error) {
-	if s.NearestBuoyID == "" {
-		return nil, fmt.Errorf("no buoy ID configured for spot %q", s.Name)
+	if s.NearestBuoyID == "" || s.NearestBuoyID == "N/A" {
+		return nil, nil
 	}
 
 	url := fmt.Sprintf("https://www.ndbc.noaa.gov/data/realtime2/%s.txt", s.NearestBuoyID)

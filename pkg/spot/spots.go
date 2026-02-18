@@ -11,6 +11,7 @@ var spots = []Spot{
 		BreakType:     "beach break",
 		Facing:        "WSW",
 		NearestBuoyID: "46086",
+		TideStationID: "9410170",
 		TidalRange:    ">2ft",
 		Spec:          "Beach break with shifting sandbars. Mornings traditionally better than afternoons. Highly exposed spot — conditions are frequently rougher than forecasts suggest. Strong rip currents are common, especially with wind > 15 mph or during large swell. Exercise caution in strong wind regardless of direction.",
 		Meta:          map[string]any{},
