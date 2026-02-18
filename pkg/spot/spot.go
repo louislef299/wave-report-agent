@@ -19,6 +19,7 @@ type Spot struct {
 	Longitude float32 `json:"longitude" jsonschema_description:"The longitudinal point to find the spot."`
 	Latitude  float32 `json:"latitude" jsonschema_description:"The latitudinal point to find the spot."`
 
+	SpotType      string `json:"spot_type" jsonschema_description:"The type of surf spot: 'ocean' or 'lake'. Lake spots depend entirely on locally generated wind swell; ocean spots prefer distant groundswell. Evaluation criteria differ significantly between the two."`
 	BreakType     string `json:"break_type" jsonschema_description:"The type of wave break: beach break, reef break, or point break."`
 	Facing        string `json:"facing" jsonschema_description:"Cardinal direction the beach faces (e.g. WSW). Used to determine whether wind is offshore or onshore."`
 	NearestBuoyID string `json:"nearest_buoy_id" jsonschema_description:"NOAA NDBC station ID of the nearest offshore buoy for real-time wave observations."`
@@ -30,22 +31,6 @@ type Spot struct {
 
 type SpotArgs struct {
 	Name string `json:"name" jsonschema_description:"The name of the spot to gather information for. Sending a name of 'all' will return all spots of interest."`
-}
-
-var spots = []Spot{
-	{
-		Name:          "Ocean Beach",
-		City:          "San Diego",
-		State:         "California",
-		Latitude:      32.7487318,
-		Longitude:     -117.2583427,
-		BreakType:     "beach break",
-		Facing:        "WSW",
-		NearestBuoyID: "46086",
-		TidalRange:    ">2ft",
-		Spec:          "Beach break with shifting sandbars. Mornings traditionally better than afternoons. Highly exposed spot — conditions are frequently rougher than forecasts suggest. Strong rip currents are common, especially with wind > 15 mph or during large swell. Exercise caution in strong wind regardless of direction.",
-		Meta:          map[string]any{},
-	},
 }
 
 type SpotsResult struct {
