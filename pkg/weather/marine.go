@@ -12,7 +12,7 @@ import (
 
 // https://open-meteo.com/en/docs/marine-weather-api#data_sources
 
-type OpenMetroResp struct {
+type OpenMeteoResp struct {
 	HourlyUnits HourlyUnits `json:"hourly_units"`
 	Hourly      Hourly      `json:"hourly"`
 }
@@ -45,7 +45,7 @@ type Hourly struct {
 	SeaLevelHeightMsl  []float32 `json:"sea_level_height_msl"`
 }
 
-func GetHourlyMarineForecast(ctx tool.Context, s *spot.Spot) (*OpenMetroResp, error) {
+func GetHourlyMarineForecast(ctx tool.Context, s *spot.Spot) (*OpenMeteoResp, error) {
 	resp, err := http.Get(generateMarineUrl(s))
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func GetHourlyMarineForecast(ctx tool.Context, s *spot.Spot) (*OpenMetroResp, er
 		return nil, err
 	}
 
-	var openResp OpenMetroResp
+	var openResp OpenMeteoResp
 	err = json.Unmarshal(resBody, &openResp)
 	if err != nil {
 		return nil, err

@@ -12,6 +12,15 @@ import (
 	"google.golang.org/adk/tool"
 )
 
+const tideTimeFormat = "20060102"
+
+type TidePredictionArgs struct {
+	Spot *spot.Spot
+
+	// Represents the number of days to return in the result
+	Days int
+}
+
 // TidePrediction is a single high or low tide event from the NOAA CO-OPS API.
 type TidePrediction struct {
 	Time     string  `json:"time"`
@@ -41,26 +50,27 @@ type coopsResp struct {
 // from the NOAA CO-OPS API for the spot's configured tide gauge station.
 // Returns nil without error for lake spots (tides negligible) or spots with no
 // station configured.
-func GetTidePredictions(_ tool.Context, s *spot.Spot) (*TidePredictionsResp, error) {
-	if s.TideStationID == "" || s.TideStationID == "N/A" || s.SpotType == "lake" {
+// https://api.tidesandcurrents.noaa.gov/api/prod
+func GetTidePredictions(_ tool.Context, a *TidePredictionArgs) (*TidePredictionsResp, error) {
+	if a.Spot.TideStationID == "" || a.Spot.TideStationID == "N/A" {
 		return nil, nil
 	}
 
 	now := time.Now()
-	begin := now.Format("20060102")
-	end := now.AddDate(0, 0, 1).Format("20060102")
+	begin := now.Format(tideTimeFormat)
+	end := now.AddDate(0, 0, a.Days).Format(tideTimeFormat)
 
 	url := fmt.Sprintf(
 		"https://api.tidesandcurrents.noaa.gov/api/prod/datagetter"+
 			"?station=%s&product=predictions&datum=MLLW"+
 			"&time_zone=lst_ldt&interval=hilo&units=english&format=json"+
 			"&begin_date=%s&end_date=%s",
-		s.TideStationID, begin, end,
+		a.Spot.TideStationID, begin, end,
 	)
 
 	resp, err := http.Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("fetching tide predictions for station %s: %w", s.TideStationID, err)
+		return nil, fmt.Errorf("fetching tide predictions for station %s: %w", a.Spot.TideStationID, err)
 	}
 	defer resp.Body.Close()
 
@@ -92,7 +102,7 @@ func GetTidePredictions(_ tool.Context, s *spot.Spot) (*TidePredictionsResp, err
 	}
 
 	return &TidePredictionsResp{
-		StationID:   s.TideStationID,
+		StationID:   a.Spot.TideStationID,
 		Predictions: predictions,
 	}, nil
 }

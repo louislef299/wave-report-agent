@@ -28,7 +28,7 @@ func getTools() []tool.Tool {
 
 	openMetroTool, err := functiontool.New(functiontool.Config{
 		Name:        "get_spot_marine_forecast",
-		Description: "Returns hourly marine forecast information of a provided Spot. Only to be used for ocean Spot types.",
+		Description: "Returns hourly marine forecast information of a provided Spot. Used with all SpotTypes.",
 	}, weather.GetHourlyMarineForecast)
 	if err != nil {
 		log.Fatal("Failed to create Open Metro tool:", err)
@@ -36,7 +36,7 @@ func getTools() []tool.Tool {
 
 	currentDateTool, err := functiontool.New(functiontool.Config{
 		Name:        "get_current_date",
-		Description: "Returns the current date in RFC3339 format so agent can gather bearings.",
+		Description: "Returns the current date in RFC3339 format so agent can gather bearings. Only required if the current date is required & unknown.",
 	}, getDate)
 
 	buoyTool, err := functiontool.New(functiontool.Config{

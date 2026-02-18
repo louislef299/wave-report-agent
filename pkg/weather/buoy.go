@@ -66,7 +66,10 @@ func parseBuoyData(r io.Reader, stationID string) (*BuoyObservation, error) {
 		}
 	}
 
-	// Read data rows until we find one with wave data (WVHT != MM)
+	// Read data rows. Prefer a row that has wave data, but fall back to the
+	// most recent row with any valid wind data — C-MAN shore stations report
+	// wind but never report wave height/period.
+	var fallback *BuoyObservation
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" || strings.HasPrefix(line, "#") {
@@ -81,9 +84,8 @@ func parseBuoyData(r io.Reader, stationID string) (*BuoyObservation, error) {
 		}
 
 		obs := &BuoyObservation{
-			StationID:       stationID,
-			ObservationTime: fmt.Sprintf("%s-%s-%s %s:%s", fields[0], fields[1], fields[2], fields[3], fields[4]),
-
+			StationID:        stationID,
+			ObservationTime:  fmt.Sprintf("%s-%s-%s %s:%s", fields[0], fields[1], fields[2], fields[3], fields[4]),
 			WindDirectionDeg: parseNdbcFloat(fields[5]),
 			WindSpeedMph:     metersPerSecToMph(parseNdbcFloat(fields[6])),
 			GustSpeedMph:     metersPerSecToMph(parseNdbcFloat(fields[7])),
@@ -93,15 +95,20 @@ func parseBuoyData(r io.Reader, stationID string) (*BuoyObservation, error) {
 			WaterTempC:       parseNdbcFloat(fields[14]),
 		}
 
-		// Prefer rows that have wave height data, but return first row if we've
-		// tried several and still have no wave data (some buoys don't report it).
 		if obs.WaveHeightFt > 0 || obs.DominantPeriodS > 0 {
 			return obs, nil
+		}
+		// Keep the most recent parseable row as fallback for wind-only stations.
+		if fallback == nil && obs.WindSpeedMph >= 0 {
+			fallback = obs
 		}
 	}
 
 	if err := scanner.Err(); err != nil {
 		return nil, fmt.Errorf("reading buoy data: %w", err)
+	}
+	if fallback != nil {
+		return fallback, nil
 	}
 	return nil, fmt.Errorf("no usable observations found for buoy %s", stationID)
 }
