@@ -10,7 +10,6 @@ import (
 	"net/url"
 
 	"github.com/louislef299/wave-report-agent/pkg/spot"
-	"google.golang.org/adk/tool"
 )
 
 const (
@@ -39,7 +38,7 @@ type GridRespPeriod struct {
 // GetNwsForecast gathers the 7-day forecast over 12 hour periods by calling the
 // National Weather Service API and returning a GridResp.
 // https://www.weather.gov/documentation/services-web-api
-func GetNwsForecast(ctx tool.Context, s *spot.Spot) (*GridResp, error) {
+func GetNwsForecast(ctx context.Context, s *spot.Spot) (*GridResp, error) {
 	var err error
 	forecastURL, ok := s.Meta[spot.MetaNwsGridPoint]
 	if !ok {

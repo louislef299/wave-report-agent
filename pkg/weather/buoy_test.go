@@ -50,7 +50,7 @@ func TestGetBuoyObservations(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(fmt.Sprintf("%s (%s)", tt.spot.Name, tt.spot.NearestBuoyID), func(t *testing.T) {
-			obs, err := GetBuoyObservations(nil, tt.spot)
+			obs, err := GetBuoyObservations(t.Context(), tt.spot)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}

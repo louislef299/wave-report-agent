@@ -1,13 +1,13 @@
 package weather
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/louislef299/wave-report-agent/pkg/spot"
-	"google.golang.org/adk/tool"
 )
 
 // https://open-meteo.com/en/docs/marine-weather-api#data_sources
@@ -45,7 +45,7 @@ type Hourly struct {
 	SeaLevelHeightMsl  []float32 `json:"sea_level_height_msl"`
 }
 
-func GetHourlyMarineForecast(ctx tool.Context, s *spot.Spot) (*OpenMeteoResp, error) {
+func GetHourlyMarineForecast(ctx context.Context, s *spot.Spot) (*OpenMeteoResp, error) {
 	resp, err := http.Get(generateMarineUrl(s))
 	if err != nil {
 		return nil, err
