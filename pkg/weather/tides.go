@@ -1,6 +1,7 @@
 package weather
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,7 +10,6 @@ import (
 	"time"
 
 	"github.com/louislef299/wave-report-agent/pkg/spot"
-	"google.golang.org/adk/tool"
 )
 
 const tideTimeFormat = "20060102"
@@ -51,7 +51,7 @@ type coopsResp struct {
 // Returns nil without error for lake spots (tides negligible) or spots with no
 // station configured.
 // https://api.tidesandcurrents.noaa.gov/api/prod
-func GetTidePredictions(_ tool.Context, a *TidePredictionArgs) (*TidePredictionsResp, error) {
+func GetTidePredictions(ctx context.Context, a *TidePredictionArgs) (*TidePredictionsResp, error) {
 	if a.Spot.TideStationID == "" || a.Spot.TideStationID == "N/A" {
 		return nil, nil
 	}

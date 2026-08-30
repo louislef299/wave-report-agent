@@ -1,13 +1,13 @@
 package weather
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/louislef299/wave-report-agent/pkg/spot"
-	"google.golang.org/adk/tool"
 )
 
 // NwsAlert is a single active NWS weather alert for a location.
@@ -49,7 +49,7 @@ type nwsAlertProperties struct {
 // Useful for all spot types but especially important for lake spots where
 // Gale Warnings and Storm Warnings are the primary surf condition signal.
 // https://www.weather.gov/documentation/services-web-api
-func GetNwsAlerts(ctx tool.Context, s *spot.Spot) (*NwsAlertsResp, error) {
+func GetNwsAlerts(ctx context.Context, s *spot.Spot) (*NwsAlertsResp, error) {
 	url := fmt.Sprintf("%s/alerts/active?point=%.4f,%.4f", nwsBaseUrl, s.Latitude, s.Longitude)
 
 	req, err := generateNwsReq(ctx, url)

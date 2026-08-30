@@ -1,10 +1,9 @@
 package spot
 
 import (
+	"context"
 	"errors"
 	"strings"
-
-	"google.golang.org/adk/tool"
 )
 
 const MetaNwsGridPoint = "nws_grid_point"
@@ -42,7 +41,7 @@ type SpotsResult struct {
 	Spots []Spot `json:"spots"`
 }
 
-func GetSpotsOfInterest(_ tool.Context, args SpotArgs) (SpotsResult, error) {
+func GetSpotsOfInterest(_ context.Context, args SpotArgs) (SpotsResult, error) {
 	if strings.EqualFold(args.Name, "all") {
 		return SpotsResult{Spots: spots}, nil
 	}

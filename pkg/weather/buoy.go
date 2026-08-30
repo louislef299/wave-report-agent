@@ -2,6 +2,7 @@ package weather
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"math"
@@ -10,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/louislef299/wave-report-agent/pkg/spot"
-	"google.golang.org/adk/tool"
 )
 
 // BuoyObservation holds the most recent real-time observation from a NOAA NDBC
@@ -32,7 +32,7 @@ type BuoyObservation struct {
 // GetBuoyObservations fetches the latest real-time observation from the NOAA
 // NDBC buoy nearest to the given surf spot. Returns the most recent reading
 // that has wave data.
-func GetBuoyObservations(_ tool.Context, s *spot.Spot) (*BuoyObservation, error) {
+func GetBuoyObservations(ctx context.Context, s *spot.Spot) (*BuoyObservation, error) {
 	if s.NearestBuoyID == "" || s.NearestBuoyID == "N/A" {
 		return nil, nil
 	}
