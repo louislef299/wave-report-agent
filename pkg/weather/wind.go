@@ -42,17 +42,19 @@ type WindHourly struct {
 // direction follows the meteorological convention of the bearing wind blows
 // FROM, which is the same convention Spot.FetchMilesAt expects, so no
 // conversion is needed between them.
-func GetWindForecast(ctx context.Context, s *spot.Spot, w Window) (*WindResp, error) {
+// It returns the raw body alongside the decoded value for the same reason
+// GetMarineForecast does: the ledger keeps exactly what upstream sent.
+func GetWindForecast(ctx context.Context, s *spot.Spot, w Window) (*WindResp, []byte, error) {
 	body, err := get(ctx, windURL(s, w), nil)
 	if err != nil {
-		return nil, fmt.Errorf("fetching wind forecast for %s: %w", s.Name, err)
+		return nil, nil, fmt.Errorf("fetching wind forecast for %s: %w", s.Name, err)
 	}
 
 	var resp WindResp
 	if err := json.Unmarshal(body, &resp); err != nil {
-		return nil, fmt.Errorf("parsing wind forecast for %s: %w", s.Name, err)
+		return nil, nil, fmt.Errorf("parsing wind forecast for %s: %w", s.Name, err)
 	}
-	return &resp, nil
+	return &resp, body, nil
 }
 
 func windURL(s *spot.Spot, w Window) string {
