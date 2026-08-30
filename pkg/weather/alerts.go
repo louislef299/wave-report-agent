@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 
 	"github.com/louislef299/wave-report-agent/pkg/spot"
 )
@@ -52,24 +50,9 @@ type nwsAlertProperties struct {
 func GetNwsAlerts(ctx context.Context, s *spot.Spot) (*NwsAlertsResp, error) {
 	url := fmt.Sprintf("%s/alerts/active?point=%.4f,%.4f", nwsBaseUrl, s.Latitude, s.Longitude)
 
-	req, err := generateNwsReq(ctx, url)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := http.DefaultClient.Do(req)
+	body, err := getNws(ctx, url)
 	if err != nil {
 		return nil, fmt.Errorf("fetching NWS alerts for %s: %w", s.Name, err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, ErrInvalidHttpResponse
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
 	}
 
 	var raw nwsAlertCollection

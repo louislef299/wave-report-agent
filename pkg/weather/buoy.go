@@ -2,11 +2,11 @@ package weather
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"math"
-	"net/http"
 	"strconv"
 	"strings"
 
@@ -38,17 +38,12 @@ func GetBuoyObservations(ctx context.Context, s *spot.Spot) (*BuoyObservation, e
 	}
 
 	url := fmt.Sprintf("https://www.ndbc.noaa.gov/data/realtime2/%s.txt", s.NearestBuoyID)
-	resp, err := http.Get(url)
+	body, err := get(ctx, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("fetching buoy %s: %w", s.NearestBuoyID, err)
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, ErrInvalidHttpResponse
-	}
-
-	return parseBuoyData(resp.Body, s.NearestBuoyID)
+	return parseBuoyData(bytes.NewReader(body), s.NearestBuoyID)
 }
 
 // parseBuoyData parses the NDBC standard meteorological text format.
