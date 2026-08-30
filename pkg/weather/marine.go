@@ -73,21 +73,25 @@ type Hourly struct {
 // GetHourlyMarineForecast returns the forecast-only marine series used by the
 // ADK agent tool.
 func GetHourlyMarineForecast(ctx context.Context, s *spot.Spot) (*OpenMeteoResp, error) {
-	return GetMarineForecast(ctx, s, AgentWindow)
+	resp, _, err := GetMarineForecast(ctx, s, AgentWindow)
+	return resp, err
 }
 
-// GetMarineForecast fetches the hourly marine series over the given window.
-func GetMarineForecast(ctx context.Context, s *spot.Spot, w Window) (*OpenMeteoResp, error) {
+// GetMarineForecast fetches the hourly marine series over the given window and
+// returns the raw body alongside the decoded value. The ledger stores the raw
+// bytes so that fields this struct does not model today can still be recovered
+// later; re-encoding the decoded value would silently drop them.
+func GetMarineForecast(ctx context.Context, s *spot.Spot, w Window) (*OpenMeteoResp, []byte, error) {
 	body, err := get(ctx, marineURL(s, w), nil)
 	if err != nil {
-		return nil, fmt.Errorf("fetching marine forecast for %s: %w", s.Name, err)
+		return nil, nil, fmt.Errorf("fetching marine forecast for %s: %w", s.Name, err)
 	}
 
 	var openResp OpenMeteoResp
 	if err := json.Unmarshal(body, &openResp); err != nil {
-		return nil, fmt.Errorf("parsing marine forecast for %s: %w", s.Name, err)
+		return nil, nil, fmt.Errorf("parsing marine forecast for %s: %w", s.Name, err)
 	}
-	return &openResp, nil
+	return &openResp, body, nil
 }
 
 func marineURL(s *spot.Spot, w Window) string {
