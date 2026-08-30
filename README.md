@@ -136,12 +136,40 @@ passed. About 30 KB per run, so roughly 90 MB/year at a three-hour cadence.
 both lake spots' nearest NDBC stations are C-MAN shore stations that report wind
 and never waves.
 
+### Alerts
+
+Notifications go through a one-method `notify.Notifier`, so swapping transports
+touches one file. [ntfy.sh](https://ntfy.sh) is the shipped implementation —
+one POST, no SDK, and a real push notification on your phone. SMS would have
+meant Twilio plus A2P 10DLC carrier registration for a personal project.
+
+```bash
+export NTFY_TOPIC=some-long-random-string   # optional: NTFY_TOKEN, NTFY_SERVER
+just preview                                # print what would be sent
+just alert                                  # score, record, and send
+go run ./cmd/surfcheck -notify -min-rating Epic -cooldown 24h
+```
+
+Alerts fire from what the ledger stored rather than from the in-memory verdict,
+so a decision that failed to persist can never be sent — there would be no row
+to mark, and the next run would send it again. A failed send likewise does not
+mark the decision notified, so the next run retries instead of losing it.
+
+Dedup is a cooldown per spot and board (12h by default), not a per-window match.
+Successive runs nudge a window's boundaries as the model updates, and matching
+on those would read a redrawn window as a new event and alert repeatedly through
+a single swell.
+
+> On the public ntfy server the topic name is the only thing protecting your
+> alerts. Treat it like a password — use a long random one, or self-host and set
+> `NTFY_TOKEN`.
+
 ## Project Structure
 
 ```
 main.go                  # entry point, model selection, ADK launcher setup
 cmd/
-  surfcheck/             # deterministic scorer; prints and records, sends nothing
+  surfcheck/             # deterministic scorer: fetch, rate, record, alert
 pkg/
   agent/
     agent.go             # llmagent definition and system prompt
@@ -157,6 +185,10 @@ pkg/
   ledger/
     ledger.go            # SQLite persistence
     schema.go            # migrations
+  notify/
+    notify.go            # Notifier interface, Discard no-op
+    ntfy.go              # ntfy.sh transport
+    alert.go             # verdict -> notification
   weather/
     client.go            # shared HTTP client with timeouts
     marine.go            # Open-Meteo marine forecast

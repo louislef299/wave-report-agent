@@ -269,7 +269,7 @@ type Decision struct {
 
 // RecentDecisions returns the newest decisions for a spot, most recent first.
 func (l *Ledger) RecentDecisions(ctx context.Context, spotName string, limit int) ([]Decision, error) {
-	rows, err := l.db.QueryContext(ctx, `
+	return l.queryDecisions(ctx, `
         SELECT d.id, d.run_id, r.started_at, d.spot, d.board, d.rating,
                d.window_start, d.window_end, d.peak_wave_ft, d.peak_period_s,
                d.sustained_hours, d.reasons, d.notified
@@ -278,8 +278,12 @@ func (l *Ledger) RecentDecisions(ctx context.Context, spotName string, limit int
         WHERE d.spot = ?
         ORDER BY r.started_at DESC, d.id DESC
         LIMIT ?`, spotName, limit)
+}
+
+func (l *Ledger) queryDecisions(ctx context.Context, query string, args ...any) ([]Decision, error) {
+	rows, err := l.db.QueryContext(ctx, query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("querying decisions for %s: %w", spotName, err)
+		return nil, fmt.Errorf("querying decisions: %w", err)
 	}
 	defer rows.Close()
 
@@ -315,6 +319,43 @@ func (l *Ledger) RecentDecisions(ctx context.Context, spotName string, limit int
 		out = append(out, d)
 	}
 	return out, rows.Err()
+}
+
+// DecisionsForRun returns the decisions written by a single run.
+//
+// Alerting reads back what was persisted rather than notifying from the
+// in-memory verdict, so a decision that failed to store can never be sent —
+// there would be no row to mark, and the next run would send it again.
+func (l *Ledger) DecisionsForRun(ctx context.Context, runID int64) ([]Decision, error) {
+	return l.queryDecisions(ctx, `
+        SELECT d.id, d.run_id, r.started_at, d.spot, d.board, d.rating,
+               d.window_start, d.window_end, d.peak_wave_ft, d.peak_period_s,
+               d.sustained_hours, d.reasons, d.notified
+        FROM decisions d
+        JOIN runs r ON r.id = d.run_id
+        WHERE d.run_id = ?
+        ORDER BY d.id`, runID)
+}
+
+// NotifiedSince reports whether an alert has already gone out for this spot
+// and board since the given time.
+//
+// This is a cooldown rather than a per-window check on purpose. Successive
+// runs nudge a window's boundaries by an hour or two as the model updates, so
+// matching on window start would read a redrawn window as a new event and
+// alert repeatedly through a single swell.
+func (l *Ledger) NotifiedSince(ctx context.Context, spotName, board string, since time.Time) (bool, error) {
+	var n int
+	err := l.db.QueryRowContext(ctx, `
+        SELECT count(*)
+        FROM decisions d
+        JOIN runs r ON r.id = d.run_id
+        WHERE d.spot = ? AND d.board = ? AND d.notified = 1 AND r.started_at >= ?`,
+		spotName, board, since.UTC().Format(stamp)).Scan(&n)
+	if err != nil {
+		return false, fmt.Errorf("checking notification history for %s/%s: %w", spotName, board, err)
+	}
+	return n > 0, nil
 }
 
 // MarkNotified records that a decision was sent, so a later run does not send

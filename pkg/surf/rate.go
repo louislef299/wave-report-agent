@@ -3,6 +3,7 @@ package surf
 import (
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/louislef299/wave-report-agent/pkg/spot"
@@ -35,6 +36,22 @@ const (
 )
 
 var ratingOrder = map[Rating]int{Poor: 0, Fair: 1, Good: 2, Epic: 3}
+
+// AtLeast reports whether r is at least as good as floor. Alerting uses it to
+// decide what is worth interrupting someone for.
+func (r Rating) AtLeast(floor Rating) bool {
+	return ratingOrder[r] >= ratingOrder[floor]
+}
+
+// ParseRating converts a rating name, case-insensitively.
+func ParseRating(s string) (Rating, error) {
+	for _, r := range []Rating{Poor, Fair, Good, Epic} {
+		if strings.EqualFold(string(r), s) {
+			return r, nil
+		}
+	}
+	return "", fmt.Errorf("%q is not a rating (Poor, Fair, Good, Epic)", s)
+}
 
 // RulesetVersion identifies the scoring rules in force. Bump it whenever
 // DefaultThresholds or the gate logic changes: the ledger stamps every run

@@ -215,6 +215,112 @@ func TestMarkNotified(t *testing.T) {
 	}
 }
 
+func TestDecisionsForRun(t *testing.T) {
+	l := openTemp(t)
+	ctx := t.Context()
+
+	first := time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC)
+	firstID, err := l.RecordRun(ctx, RunInput{
+		StartedAt: first, RulesetVersion: testRuleset,
+		Spots: []SpotRun{spotRun(t, "Stoney Point", first, surf.Good)},
+	})
+	if err != nil {
+		t.Fatalf("RecordRun: %v", err)
+	}
+
+	second := first.Add(time.Hour)
+	if _, err := l.RecordRun(ctx, RunInput{
+		StartedAt: second, RulesetVersion: testRuleset,
+		Spots: []SpotRun{spotRun(t, "Stoney Point", second, surf.Epic)},
+	}); err != nil {
+		t.Fatalf("RecordRun: %v", err)
+	}
+
+	got, err := l.DecisionsForRun(ctx, firstID)
+	if err != nil {
+		t.Fatalf("DecisionsForRun: %v", err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("got %d decisions, want 2 boards from the first run only", len(got))
+	}
+	for _, d := range got {
+		if d.RunID != firstID {
+			t.Errorf("decision %d belongs to run %d, want %d", d.ID, d.RunID, firstID)
+		}
+		if d.Rating != string(surf.Good) {
+			t.Errorf("rating = %s, want Good from the first run", d.Rating)
+		}
+	}
+}
+
+// TestNotifiedSince covers the alert cooldown. It is deliberately a
+// spot-and-board time window rather than a per-window match: successive runs
+// redraw a window's boundaries as the model updates, and matching on those
+// would alert repeatedly through a single swell.
+func TestNotifiedSince(t *testing.T) {
+	l := openTemp(t)
+	ctx := t.Context()
+
+	at := time.Date(2026, 11, 1, 12, 0, 0, 0, time.UTC)
+	runID, err := l.RecordRun(ctx, RunInput{
+		StartedAt: at, RulesetVersion: testRuleset,
+		Spots: []SpotRun{spotRun(t, "Stoney Point", at, surf.Epic)},
+	})
+	if err != nil {
+		t.Fatalf("RecordRun: %v", err)
+	}
+
+	board := string(surf.Longboard)
+
+	// Nothing has been sent yet.
+	sent, err := l.NotifiedSince(ctx, "Stoney Point", board, at.Add(-12*time.Hour))
+	if err != nil {
+		t.Fatalf("NotifiedSince: %v", err)
+	}
+	if sent {
+		t.Fatal("nothing has been notified yet")
+	}
+
+	decisions, err := l.DecisionsForRun(ctx, runID)
+	if err != nil {
+		t.Fatalf("DecisionsForRun: %v", err)
+	}
+	for _, d := range decisions {
+		if d.Board == board {
+			if err := l.MarkNotified(ctx, d.ID); err != nil {
+				t.Fatalf("MarkNotified: %v", err)
+			}
+		}
+	}
+
+	sent, err = l.NotifiedSince(ctx, "Stoney Point", board, at.Add(-12*time.Hour))
+	if err != nil {
+		t.Fatalf("NotifiedSince: %v", err)
+	}
+	if !sent {
+		t.Error("the longboard alert should be inside the cooldown window")
+	}
+
+	// The other board is tracked separately: a longboard day is not a
+	// shortboard day, and suppressing one because of the other loses a signal.
+	sent, err = l.NotifiedSince(ctx, "Stoney Point", string(surf.Shortboard), at.Add(-12*time.Hour))
+	if err != nil {
+		t.Fatalf("NotifiedSince: %v", err)
+	}
+	if sent {
+		t.Error("shortboard has not been notified and must not be suppressed by longboard")
+	}
+
+	// Once the cooldown has elapsed the alert is eligible again.
+	sent, err = l.NotifiedSince(ctx, "Stoney Point", board, at.Add(time.Hour))
+	if err != nil {
+		t.Fatalf("NotifiedSince: %v", err)
+	}
+	if sent {
+		t.Error("an alert older than the cooldown should no longer suppress")
+	}
+}
+
 // TestForecastErrors covers the automatic half of the labelling strategy: an
 // hour predicted by an earlier run, compared against the same hour once it has
 // been observed. No manual effort produces these rows.

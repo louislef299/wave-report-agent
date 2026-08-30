@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/louislef299/wave-report-agent/pkg/ledger"
+	"github.com/louislef299/wave-report-agent/pkg/notify"
 	"github.com/louislef299/wave-report-agent/pkg/spot"
 	"github.com/louislef299/wave-report-agent/pkg/surf"
 	"github.com/louislef299/wave-report-agent/pkg/weather"
@@ -23,29 +24,60 @@ import (
 
 var boards = []surf.Board{surf.Longboard, surf.Shortboard}
 
+type options struct {
+	dbPath    string
+	spotName  string
+	tzName    string
+	verbose   bool
+	dryRun    bool
+	notify    bool
+	minRating string
+	cooldown  time.Duration
+}
+
 func main() {
-	var (
-		dbPath   = flag.String("db", defaultDBPath(), "path to the ledger database")
-		spotName = flag.String("spot", "all", "spot to evaluate, or 'all'")
-		tzName   = flag.String("tz", "America/Chicago", "timezone for displayed times")
-		verbose  = flag.Bool("v", false, "print the reasoning behind every verdict")
-		dryRun   = flag.Bool("dry-run", false, "score and print without writing to the ledger")
-	)
+	var o options
+	flag.StringVar(&o.dbPath, "db", defaultDBPath(), "path to the ledger database")
+	flag.StringVar(&o.spotName, "spot", "all", "spot to evaluate, or 'all'")
+	flag.StringVar(&o.tzName, "tz", "America/Chicago", "timezone for displayed times")
+	flag.BoolVar(&o.verbose, "v", false, "print the reasoning behind every verdict")
+	flag.BoolVar(&o.dryRun, "dry-run", false, "score and print without writing to the ledger")
+	flag.BoolVar(&o.notify, "notify", false,
+		"send alerts for qualifying verdicts (needs "+envNtfyTopic+")")
+	flag.StringVar(&o.minRating, "min-rating", string(surf.Good),
+		"only alert at or above this rating (Poor, Fair, Good, Epic)")
+	flag.DurationVar(&o.cooldown, "cooldown", 12*time.Hour,
+		"suppress repeat alerts for the same spot and board within this window")
 	flag.Parse()
 
-	if err := run(context.Background(), *dbPath, *spotName, *tzName, *verbose, *dryRun); err != nil {
+	if err := run(context.Background(), o); err != nil {
 		fmt.Fprintln(os.Stderr, "surfcheck:", err)
 		os.Exit(1)
 	}
 }
 
-func run(ctx context.Context, dbPath, spotName, tzName string, verbose, dryRun bool) error {
-	loc, err := time.LoadLocation(tzName)
+func run(ctx context.Context, o options) error {
+	loc, err := time.LoadLocation(o.tzName)
 	if err != nil {
-		return fmt.Errorf("loading timezone %q: %w", tzName, err)
+		return fmt.Errorf("loading timezone %q: %w", o.tzName, err)
 	}
 
-	res, err := spot.GetSpotsOfInterest(ctx, spot.SpotArgs{Name: spotName})
+	minRating, err := surf.ParseRating(o.minRating)
+	if err != nil {
+		return err
+	}
+	alerts := alertOpts{MinRating: minRating, Cooldown: o.cooldown, Location: loc}
+
+	// Built before any network work so a misconfigured topic fails immediately
+	// rather than after a minute of fetching.
+	var notifier notify.Notifier = notify.Discard{}
+	if o.notify {
+		if notifier, err = buildNotifier(o.dryRun, os.Stdout); err != nil {
+			return err
+		}
+	}
+
+	res, err := spot.GetSpotsOfInterest(ctx, spot.SpotArgs{Name: o.spotName})
 	if err != nil {
 		return err
 	}
@@ -58,7 +90,7 @@ func run(ctx context.Context, dbPath, spotName, tzName string, verbose, dryRun b
 		// is a prerequisite rather than a hazard. Ocean spots need different
 		// rules and stay with the ADK agent for now.
 		if s.SpotType != "lake" {
-			if spotName != "all" {
+			if o.spotName != "all" {
 				return fmt.Errorf("%s is an %s spot; surfcheck only scores lake spots", s.Name, s.SpotType)
 			}
 			continue
@@ -71,21 +103,27 @@ func run(ctx context.Context, dbPath, spotName, tzName string, verbose, dryRun b
 			continue
 		}
 		runs = append(runs, sr)
-		report(os.Stdout, sr, loc, verbose)
+		report(os.Stdout, sr, loc, o.verbose)
 	}
 
 	if len(runs) == 0 {
 		return fmt.Errorf("no lake spots were successfully evaluated")
 	}
-	if dryRun {
+
+	if o.dryRun {
+		if o.notify {
+			if err := previewAlerts(ctx, notifier, runs, alerts, os.Stdout); err != nil {
+				return err
+			}
+		}
 		fmt.Println("dry run: nothing written to the ledger")
 		return nil
 	}
 
-	if err := os.MkdirAll(filepath.Dir(dbPath), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(o.dbPath), 0o755); err != nil {
 		return fmt.Errorf("creating ledger directory: %w", err)
 	}
-	l, err := ledger.Open(ctx, dbPath)
+	l, err := ledger.Open(ctx, o.dbPath)
 	if err != nil {
 		return err
 	}
@@ -99,9 +137,21 @@ func run(ctx context.Context, dbPath, spotName, tzName string, verbose, dryRun b
 	if err != nil {
 		return err
 	}
+	fmt.Printf("recorded run %d (%s) to %s\n", runID, surf.RulesetVersion, o.dbPath)
 
-	fmt.Printf("recorded run %d (%s) to %s\n", runID, surf.RulesetVersion, dbPath)
-	return nil
+	if !o.notify {
+		return nil
+	}
+
+	spots := make(map[string]spot.Spot, len(runs))
+	verdicts := make(map[string]surf.Verdict, len(runs)*len(boards))
+	for _, sr := range runs {
+		spots[sr.Spot.Name] = sr.Spot
+		for _, v := range sr.Verdicts {
+			verdicts[verdictKey(sr.Spot.Name, string(v.Board))] = v
+		}
+	}
+	return sendAlerts(ctx, l, notifier, runID, spots, verdicts, alerts, os.Stdout)
 }
 
 // evaluate fetches, merges and scores one spot.
