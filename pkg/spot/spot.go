@@ -22,6 +22,10 @@ type Spot struct {
 	BreakType string `json:"break_type" jsonschema_description:"The type of wave break: beach break, reef break, or point break."`
 	Facing    string `json:"facing" jsonschema_description:"Cardinal direction the beach faces (e.g. WSW). Used to determine whether wind is offshore or onshore."`
 
+	// FetchArcs is set for lake spots, where miles of open water upwind
+	// governs how large a wind sea can grow. Ocean spots leave it empty.
+	FetchArcs []FetchArc `json:"fetch_arcs" jsonschema_description:"Miles of open water upwind by wind bearing. Wind from a bearing with little fetch cannot build waves regardless of speed. Empty for ocean spots."`
+
 	// https://www.ndbc.noaa.gov
 	NearestBuoyID string `json:"nearest_buoy_id" jsonschema_description:"NOAA NDBC station ID of the nearest offshore buoy for real-time wave observations."`
 
