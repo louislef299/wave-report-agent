@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -68,19 +66,9 @@ func GetTidePredictions(ctx context.Context, a *TidePredictionArgs) (*TidePredic
 		a.Spot.TideStationID, begin, end,
 	)
 
-	resp, err := http.Get(url)
+	body, err := get(ctx, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("fetching tide predictions for station %s: %w", a.Spot.TideStationID, err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, ErrInvalidHttpResponse
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
 	}
 
 	var raw coopsResp

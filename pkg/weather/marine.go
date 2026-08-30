@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 
 	"github.com/louislef299/wave-report-agent/pkg/spot"
 )
@@ -46,25 +44,14 @@ type Hourly struct {
 }
 
 func GetHourlyMarineForecast(ctx context.Context, s *spot.Spot) (*OpenMeteoResp, error) {
-	resp, err := http.Get(generateMarineUrl(s))
+	body, err := get(ctx, generateMarineUrl(s), nil)
 	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, ErrInvalidHttpResponse
-	}
-
-	resBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fetching marine forecast for %s: %w", s.Name, err)
 	}
 
 	var openResp OpenMeteoResp
-	err = json.Unmarshal(resBody, &openResp)
-	if err != nil {
-		return nil, err
+	if err := json.Unmarshal(body, &openResp); err != nil {
+		return nil, fmt.Errorf("parsing marine forecast for %s: %w", s.Name, err)
 	}
 	return &openResp, nil
 }

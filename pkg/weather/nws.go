@@ -3,10 +3,7 @@ package weather
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"net/url"
 
 	"github.com/louislef299/wave-report-agent/pkg/spot"
@@ -16,8 +13,6 @@ const (
 	geoJSON    = "application/geo+json"
 	nwsBaseUrl = "https://api.weather.gov"
 )
-
-var ErrInvalidHttpResponse = errors.New("received an invalid HTTP response")
 
 type GridResp struct {
 	Properties GridRespProperties `json:"properties"`
@@ -52,20 +47,14 @@ func GetNwsForecast(ctx context.Context, s *spot.Spot) (*GridResp, error) {
 	if !ok {
 		return nil, fmt.Errorf("didn't get expected metadata return type of string")
 	}
-	resp, err := http.Get(f)
+	body, err := getNws(ctx, f)
 	if err != nil {
-		return nil, err
-	}
-
-	resBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fetching NWS forecast for %s: %w", s.Name, err)
 	}
 
 	var gr GridResp
-	err = json.Unmarshal(resBody, &gr)
-	if err != nil {
-		return nil, err
+	if err := json.Unmarshal(body, &gr); err != nil {
+		return nil, fmt.Errorf("parsing NWS forecast for %s: %w", s.Name, err)
 	}
 	return &gr, nil
 }
@@ -88,44 +77,14 @@ func GatherGridPoint(ctx context.Context, s *spot.Spot) (string, error) {
 		return "", err
 	}
 
-	req, err := generateNwsReq(ctx, u)
+	body, err := getNws(ctx, u)
 	if err != nil {
-		return "", err
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", ErrInvalidHttpResponse
-	}
-
-	resBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
+		return "", fmt.Errorf("fetching NWS gridpoint for %s: %w", s.Name, err)
 	}
 
 	var weatherResp PointsResp
-	err = json.Unmarshal(resBody, &weatherResp)
-	if err != nil {
-		return "", err
+	if err := json.Unmarshal(body, &weatherResp); err != nil {
+		return "", fmt.Errorf("parsing NWS gridpoint for %s: %w", s.Name, err)
 	}
 	return weatherResp.Properties.Forecast, nil
-}
-
-// generateNwsReq generates a request to send to the National Weather Service
-// API and tries to follow best practices.
-// https://www.weather.gov/documentation/services-web-api
-func generateNwsReq(ctx context.Context, url string) (*http.Request, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Content-Type", geoJSON)
-	req.Header.Set("User-Agent", "louislefebvre.net/wave-report-agent/1.0")
-
-	return req, nil
 }
