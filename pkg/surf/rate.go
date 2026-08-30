@@ -36,6 +36,12 @@ const (
 
 var ratingOrder = map[Rating]int{Poor: 0, Fair: 1, Good: 2, Epic: 3}
 
+// RulesetVersion identifies the scoring rules in force. Bump it whenever
+// DefaultThresholds or the gate logic changes: the ledger stamps every run
+// with it, and without that stamp decisions made under different rules cannot
+// be told apart when the stored history is later used for training.
+const RulesetVersion = "v1"
+
 // Thresholds are the tunable floors for one board. They are passed in rather
 // than read from a global so that the ledger can record which values produced
 // a decision and tuning them does not invalidate stored history.
@@ -82,6 +88,11 @@ func DefaultThresholds(b Board) Thresholds {
 }
 
 // Window is a contiguous run of surfable forecast hours.
+//
+// The measurements describe the window's single best hour rather than the
+// maximum of each field taken independently, which could otherwise report a
+// height from one hour beside a period from another and describe an hour that
+// never existed.
 type Window struct {
 	Start, End     time.Time
 	PeakWaveFt     float64
@@ -135,52 +146,73 @@ func Rate(c Conditions, s spot.Spot, b Board, th Thresholds) Verdict {
 		scores[i] = scored{hour: h, rating: rating, sustained: sustained, reasons: reasons}
 	}
 
-	var cur *Window
-	var bestIdx = -1
+	// Collect contiguous runs of surfable hours, remembering which hour in
+	// each run scored best so the window can be described by that one hour.
+	better := func(i, j int) bool {
+		if ratingOrder[scores[i].rating] != ratingOrder[scores[j].rating] {
+			return ratingOrder[scores[i].rating] > ratingOrder[scores[j].rating]
+		}
+		return scores[i].hour.WaveHeightFt > scores[j].hour.WaveHeightFt
+	}
+
+	type windowAcc struct {
+		win     Window
+		bestIdx int
+	}
+	var accs []windowAcc
+	curIdx := -1
+
 	for i, sc := range scores {
-		if ratingOrder[sc.rating] == ratingOrder[Poor] {
-			cur = nil
+		if sc.rating == Poor {
+			curIdx = -1
 			continue
 		}
 
-		if cur == nil {
-			v.Windows = append(v.Windows, Window{
-				Start:  sc.hour.Time,
-				Rating: Poor,
+		if curIdx < 0 {
+			accs = append(accs, windowAcc{
+				win:     Window{Start: sc.hour.Time, Rating: sc.rating},
+				bestIdx: i,
 			})
-			cur = &v.Windows[len(v.Windows)-1]
+			curIdx = len(accs) - 1
 		}
 
-		cur.End = sc.hour.Time
-		cur.PeakWaveFt = max(cur.PeakWaveFt, sc.hour.WaveHeightFt)
-		cur.PeakPeriodS = max(cur.PeakPeriodS, sc.hour.WavePeriodS)
-		cur.SustainedHours = max(cur.SustainedHours, sc.sustained)
-		if ratingOrder[sc.rating] > ratingOrder[cur.Rating] {
-			cur.Rating = sc.rating
+		acc := &accs[curIdx]
+		acc.win.End = sc.hour.Time
+		if ratingOrder[sc.rating] > ratingOrder[acc.win.Rating] {
+			acc.win.Rating = sc.rating
 		}
-
-		if bestIdx < 0 || ratingOrder[sc.rating] > ratingOrder[scores[bestIdx].rating] {
-			bestIdx = i
+		if better(i, acc.bestIdx) {
+			acc.bestIdx = i
 		}
 	}
 
-	for _, w := range v.Windows {
-		if ratingOrder[w.Rating] > ratingOrder[v.Rating] {
-			v.Rating = w.Rating
+	bestWindow := -1
+	for i, acc := range accs {
+		best := scores[acc.bestIdx]
+		acc.win.PeakWaveFt = best.hour.WaveHeightFt
+		acc.win.PeakPeriodS = best.hour.WavePeriodS
+		acc.win.SustainedHours = best.sustained
+		v.Windows = append(v.Windows, acc.win)
+
+		if ratingOrder[acc.win.Rating] > ratingOrder[v.Rating] {
+			v.Rating = acc.win.Rating
+			bestWindow = i
 		}
 	}
 
 	// Explain the best hour on a pass. On a total washout, explain the hour
 	// that came closest, which is more useful than the first hour in the list.
-	if bestIdx < 0 {
-		bestIdx = 0
+	explain := 0
+	if bestWindow >= 0 {
+		explain = accs[bestWindow].bestIdx
+	} else {
 		for i, sc := range scores {
-			if sc.hour.WaveHeightFt > scores[bestIdx].hour.WaveHeightFt {
-				bestIdx = i
+			if sc.hour.WaveHeightFt > scores[explain].hour.WaveHeightFt {
+				explain = i
 			}
 		}
 	}
-	v.Reasons = scores[bestIdx].reasons
+	v.Reasons = scores[explain].reasons
 
 	if c.Gaps > 0 {
 		v.Reasons = append(v.Reasons,

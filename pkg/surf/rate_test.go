@@ -186,6 +186,36 @@ func TestRateWindowsCoverPassingHours(t *testing.T) {
 	}
 }
 
+// TestRateWindowDescribesOneRealHour guards against reporting the maximum of
+// each field independently. The ledger stores peak height and period as a
+// pair, so a height from one hour beside a period from another would record an
+// hour that never happened.
+func TestRateWindowDescribesOneRealHour(t *testing.T) {
+	c := conditions(t, "Stoney Point",
+		block{n: 24, wave: 4.0, period: 6.0, wind: 25, dir: stoneyBuildDeg, hist: true},
+		// The tallest hour is short-period; the longest-period hour is small.
+		// Neither field's maximum belongs to the same hour as the other's.
+		block{n: 1, wave: 6.0, period: 4.0, wind: 15, dir: stoneyGroomDeg},
+		block{n: 1, wave: 2.5, period: 8.0, wind: 15, dir: stoneyGroomDeg},
+	)
+
+	v := Rate(c, mustSpot(t, "Stoney Point"), Longboard, DefaultThresholds(Longboard))
+	if len(v.Windows) != 1 {
+		t.Fatalf("got %d windows, want 1", len(v.Windows))
+	}
+
+	w := v.Windows[0]
+	pairs := map[float64]float64{6.0: 4.0, 2.5: 8.0}
+	wantPeriod, ok := pairs[w.PeakWaveFt]
+	if !ok {
+		t.Fatalf("peak height %.1fft matches no observed hour", w.PeakWaveFt)
+	}
+	if w.PeakPeriodS != wantPeriod {
+		t.Errorf("window reports %.1fft at %.1fs, but no such hour exists (%.1fft was at %.1fs)",
+			w.PeakWaveFt, w.PeakPeriodS, w.PeakWaveFt, wantPeriod)
+	}
+}
+
 // TestRateIgnoresHistoryWhenRating makes sure past hours only feed the
 // duration calculation and never produce a window of their own — you cannot
 // surf yesterday.
