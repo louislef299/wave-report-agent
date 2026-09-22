@@ -1,6 +1,6 @@
 # Startup ADK web srever on localhost
 web:
-	go run main.go web api webui
+	go run ./cmd/agent/main.go web api webui
 
 # Score the configured lake spots and record the run to the ledger
 check *ARGS:
