@@ -56,3 +56,6 @@ func main() {
 // am planning on just adding an extension onto a postgres db to add the
 // observations there. Should be easier than introducing a whole new database
 // technology.
+//
+// Step 1, update the compose system, check
+// Step 2, need to integrate with the Go app: https://www.tigerdata.com/docs/get-started/quickstart/connect-your-app#tab=go
