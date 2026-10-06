@@ -1,21 +1,21 @@
 ---
 services:
-  pgdb:
-    container_name: pgdb
-    image: postgres:18.6-alpine3.24
-    restart: always
-    shm_size: 128mb
+  tsdb:
+    container_name: tsdb
+    image: timescale/timescaledb:latest-pg18
+    restart: on-failure
     environment:
-      POSTGRES_PASSWORD: local
+      PGDATA: /pgdata
+      POSTGRES_PASSWORD: password
     volumes:
-      - pg:/var/lib/postgresql
+      - pg:/pgdata
     ports:
       - 5432:5432
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 3
 
 volumes:
   pg:
