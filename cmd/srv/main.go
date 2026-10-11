@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/louislef299/wave-report-agent/pkg/spot"
 	"github.com/louislef299/wave-report-agent/pkg/weather"
 )
@@ -35,6 +37,8 @@ var stoney = spot.Spot{
 }
 
 func main() {
+	ctx := context.Background()
+
 	resp, _, err := weather.GetWindForecast(context.TODO(), &stoney, weather.Window{
 		PastDays:     0,
 		ForecastDays: 1,
@@ -48,6 +52,26 @@ func main() {
 	// 	log.Fatal(err)
 	// }
 	fmt.Printf("%+v\n", resp.Hourly)
+
+	conn, err := pgx.Connect(ctx, "postgres://postgres:password@localhost:5432/postgres")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		os.Exit(1)
+	}
+	defer conn.Close(ctx)
+
+	rows, err := conn.Query(ctx, "select tablename from pg_catalog.pg_tables limit 10")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tables, err := pgx.CollectRows(rows, pgx.RowTo[string])
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, t := range tables {
+		fmt.Println(t)
+	}
 }
 
 // A late-night update: after actually programming a bit and understanding the

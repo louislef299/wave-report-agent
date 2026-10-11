@@ -3,6 +3,7 @@ module github.com/louislef299/wave-report-agent
 go 1.25.7
 
 require (
+	github.com/jackc/pgx/v5 v5.11.0
 	github.com/louislef299/claude-go-adk v0.0.0-20260217220333-b35a73ae485c
 	google.golang.org/adk v0.4.0
 	google.golang.org/genai v1.46.0
@@ -33,6 +34,8 @@ require (
 	github.com/googleapis/gax-go/v2 v2.17.0 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
