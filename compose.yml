@@ -7,6 +7,9 @@ services:
     environment:
       PGDATA: /pgdata
       POSTGRES_PASSWORD: password
+      # Cluster-level setup belongs to the entrypoint, not goose: a connection
+      # is bound to one database for its lifetime, so the migration cannot
+      # create a database and then build tables inside it.
       POSTGRES_DB: observations
     volumes:
       - pg:/pgdata

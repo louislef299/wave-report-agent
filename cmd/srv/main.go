@@ -53,7 +53,7 @@ func main() {
 	// }
 	fmt.Printf("%+v\n", resp.Hourly)
 
-	conn, err := pgx.Connect(ctx, "postgres://postgres:password@localhost:5432/postgres")
+	conn, err := pgx.Connect(ctx, "postgres://postgres:password@localhost:5432/observations")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
