@@ -7,12 +7,13 @@ services:
     environment:
       PGDATA: /pgdata
       POSTGRES_PASSWORD: password
+      POSTGRES_DB: observations
     volumes:
       - pg:/pgdata
     ports:
       - 5432:5432
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d observations"]
       interval: 5s
       timeout: 5s
       retries: 3
