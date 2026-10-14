@@ -20,6 +20,7 @@ alias clean := down
 down *ARGS:
     docker compose down --remove-orphans {{ ARGS }}
 
+alias dc := deepclean
 deepclean:
-    goose down
     just down -v
+    goose down
